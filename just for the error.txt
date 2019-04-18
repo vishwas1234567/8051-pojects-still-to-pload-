@@ -1,0 +1,1 @@
+just read the steps that i will be posting now to debug the pyaudio error in the pip do the steps given above

@@ -1,0 +1,89 @@
+`timescale 1ns / 1ps
+
+`define EOF 32'hFFFF_FFFF
+`define NEWLINE 10
+`define NULL 0
+
+module testbench_v;
+
+	// Inputs
+    reg[3:0] cont;
+	reg[15:0] a;
+	reg[15:0] b;
+
+	// Outputs
+	wire[15:0] out;
+
+	// Instantiate the Unit Under Test (UUT)
+   
+	test_adder myALU (
+      .control(cont),
+		.a(a), 
+		.b(b), 
+		.sum(out)
+	);
+   
+
+   integer file, char, retval;
+   reg[15:0] expectedValue;
+	initial begin
+
+ 		// Initialize Inputs
+		a = 0;
+		b = 0;
+
+      // open the test inputs
+      file = $fopen("lab1.input.test", "r");
+      if (file == `NULL)      
+         $finish;
+
+		// Wait 100 ns for global reset to finish
+		#100;
+      
+      char = $fgetc(file);
+      while (char != `EOF)
+         begin
+         
+         
+         if (char == "#")  // eat a comment line
+            begin
+            while (char != `NEWLINE)
+               begin
+               char = $fgetc(file);
+               end
+            end
+         else
+          
+            begin
+            
+            retval = $ungetc(char, file); // push back the non-comment char
+            
+            retval = $fscanf(file, "%b %d %d %d", cont, a, b, expectedValue);          
+            char = $fgetc(file);
+            #10
+
+            if (out != expectedValue && cont != 4'b0000)
+               begin
+               $write("Error: %d ", a);
+               case (cont)
+               4'b0100: $write("+");
+               4'b0101: $write("-");
+               4'b0110: $write("*");
+               4'b1000: $write("||");
+               4'b1001: $write("~");
+               4'b1010: $write("&&");
+               4'b1011: $write("^");
+               4'b1100: $write("<<L");
+               4'b1101: $write(">>L");
+               4'b1110: $write(">>A");
+               endcase
+               $display(" %d should be %d (but was %d)", b, expectedValue, out);
+               end
+            
+            end
+         end // end while
+
+      $fclose(file);
+	end
+      
+endmodule
